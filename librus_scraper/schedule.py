@@ -3,6 +3,7 @@ import requests
 
 
 def get_schedule(cookies: dict, csrf_token: str = None, week: str = None) -> dict:
+
     response = requests.post(
         url="https://synergia.librus.pl/przegladaj_plan_lekcji",
         cookies=cookies,
@@ -45,7 +46,17 @@ def get_schedule(cookies: dict, csrf_token: str = None, week: str = None) -> dic
             "tags": [x.text for x in tags]
         }
 
-    return schedule
+    lesson_hours = {}
+
+    for h in response.select("table.decorated.plan-lekcji tr.line1"):
+
+        data = h.select("td:first-child, th")
+        lesson_hours[data[0].text] = data[1].text.replace("\xa0", "")
+
+    return {
+        "days": schedule,
+        "hours": lesson_hours
+    }
 
 
 def get_schedule_weeks(cookies: dict) -> list:
