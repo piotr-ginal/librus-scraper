@@ -2,11 +2,9 @@ import re
 import bs4
 import requests
 
-from util import save_html
-
 
 def get_messages(
-        cookies: dict, *, archive: bool = False, csrf_token: str = None, person: str = "-", page: str = "0") -> dict:
+        cookies: dict, *, archive: bool = False, sent: bool=False, deleted: bool=False, csrf_token: str = None, person: str = "-", page: str = "0") -> dict:
 
     data = {
         "requestkey": csrf_token,
@@ -26,12 +24,17 @@ def get_messages(
         "poprzednia": "5"
     }
 
+    url = "https://synergia.librus.pl/wiadomosci_archiwum" if archive else "https://synergia.librus.pl/wiadomosci_aktualne"
+
+    url = "https://synergia.librus.pl/wiadomosci/6" if sent else url
+
+    url = "https://synergia.librus.pl/wiadomosci/7" if deleted else url
+
     response_object = requests.post(
-        "https://synergia.librus.pl/wiadomosci_archiwum"
-        if archive else "https://synergia.librus.pl/wiadomosci_aktualne",
+        url,
         cookies=cookies,
         headers={
-            "Referer": "https://synergia.librus.pl/wiadomosci_aktualne"
+            "Referer": "https://synergia.librus.pl/wiadomosci_archiwum" if archive else "https://synergia.librus.pl/wiadomosci_aktualne"
         },
         data=data
     )
