@@ -79,10 +79,7 @@ def get_messages(
 
 
 def read_message(cookies: dict, href: str) -> dict:
-    """
-        Przy pobieraniu treści wiadomości z archiwum 
-        należy wcześniej pobrac listę wiadomości
-    """
+
     response_object = requests.get(
         url="https://synergia.librus.pl" + href,
         cookies=cookies,
@@ -115,11 +112,13 @@ def read_message(cookies: dict, href: str) -> dict:
         for x in response.select('img[src^="/assets/img/filetype_icons"]')
     ]
 
+    information = ["Użytkownik", *information]
+
     return {    
-        "nadawca": information[0],
-        "temat": information[1],
-        "data": information[2],
-        "data_odczytania": information[3],
+        "nadawca": information[-4],
+        "temat": information[-3],
+        "data": information[-2],
+        "data_odczytania": information[-1],
         "tresc": response.select_one("div.container-message-content").text,
         "files":list(zip(filenames, files))
     }

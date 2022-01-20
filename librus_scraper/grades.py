@@ -45,6 +45,7 @@ class Semester():
 
         return s
 
+    @property
     def percentage(self) -> float:
         return self.points_sum / self.points_max * 100
 
