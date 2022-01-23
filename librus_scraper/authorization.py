@@ -51,9 +51,9 @@ def get_cookies(login: str, password: str) -> dict:
     return dict(response.cookies)
 
 
-def get_csrf_token(cookies: dict) -> str:
+def get_csrf_token(cookies: dict, parent:bool=False) -> str:
     response = requests.get(
-        "https://synergia.librus.pl/uczen/index",
+        f"https://synergia.librus.pl/{'rodzic' if parent else 'uczen'}/index",
         cookies=cookies
     )
 
@@ -72,10 +72,10 @@ def get_csrf_token(cookies: dict) -> str:
     raise AuthorizationException("CSRF token not found")
 
 
-def get_login_history(cookies: dict) -> dict:
+def get_login_history(cookies: dict, parent:bool=False) -> dict:
     response = bs4.BeautifulSoup(
         requests.get(
-            "https://synergia.librus.pl/uczen/index",
+            f"https://synergia.librus.pl/{'rodzic' if parent else 'uczen'}/index",
             cookies=cookies
         ).text,
         "html.parser"
