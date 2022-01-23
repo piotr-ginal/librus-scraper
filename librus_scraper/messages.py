@@ -1,7 +1,7 @@
 import re
 import bs4
 import requests
-
+from dataclasses import dataclass
 
 def get_messages(
         cookies: dict, *, archive: bool = False, sent: bool=False, deleted: bool=False, csrf_token: str = None, person: str = "-", page: str = "0") -> dict:
@@ -182,3 +182,94 @@ def recover_messages(cookies: dict, messages: list, csrf_token: str, archive: bo
     )
 
     return response.text
+
+
+@dataclass()
+class Recipient():
+    name:str
+    recipient_id:str
+    recipient_type:str
+
+@dataclass()
+class RecipientGroup:
+
+    recipient_type:str
+    is_virtual_classes:str  = "false"
+    group:str = "0"
+    class_id:str = None
+
+    def get_recipients(self, cookies:dict) -> list[Recipient]:
+
+        response = requests.post(
+            "https://synergia.librus.pl/getRecipients",
+            cookies=cookies,
+            data={
+                "typAdresata":self.recipient_type,
+                "czyWirtualneKlasy": self.is_virtual_classes == "true",
+                "idGrupy" : self.group,
+                "klasa_rada_rodzicow" : self.class_id,
+                "klasa_opiekunowie" : self.class_id,
+                "klasa_rodzice" : self.class_id,
+            }
+        )
+
+        response = bs4.BeautifulSoup(
+            response.text,
+            "html.parser"
+        )
+
+        labels = response.select("label")
+
+        return [Recipient(label.text.strip(),label.attrs['for'].split("_")[1], self.recipient_type) for label in labels]
+
+
+def get_recipient_groups(cookies:dict) -> list[RecipientGroup]:
+
+    response = bs4.BeautifulSoup(
+        requests.get("https://synergia.librus.pl/wiadomosci/2/5", cookies=cookies).text,
+        "html.parser"
+    )
+
+    inputs = response.select(
+        "input[name='adresat']"
+    )
+
+    recipients = []
+
+    for inp in inputs:
+
+        onclick = inp.attrs["onclick"][:-2].split("(")[-1]
+
+        onclick = [x.strip('"') for x in re.split(" ?, ?", onclick)]
+
+        recipients.append(RecipientGroup(*onclick))
+
+    return recipients
+
+
+def send_message(
+    cookies:dict,
+    csrf_token:str,
+    recipinet:Recipient,
+    title:str,
+    content:str
+) -> None:
+
+    data = {
+        "requestkey":csrf_token,
+        "adresat":recipinet.recipient_type,
+        "DoKogo[]": recipinet.recipient_id,
+        "DoKogo_hid[]": recipinet.recipient_id,
+        "temat": title,
+        "tresc": content,
+        "wyslij": "Wyślij",
+    }
+
+    requests.post(
+        "https://synergia.librus.pl/wiadomosci/5",
+        cookies=cookies,
+        headers={
+            "Referer": "https://synergia.librus.pl/wiadomosci/2/5"
+        },
+        data=data
+    )
