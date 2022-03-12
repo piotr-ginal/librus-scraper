@@ -4,21 +4,32 @@ import re
 
 
 def get_notifications(cookies: dict) -> dict:
+
+    response = requests.get(
+        "https://synergia.librus.pl/uczen/index",
+        cookies=cookies
+    )
+
     response = bs4.BeautifulSoup(
-        requests.get(
-            "https://synergia.librus.pl/uczen/index",
-            cookies=cookies
-        ).text,
+        response.text,
         "html.parser"
     )
 
-    cols = response.select('div[id="graphic-menu"] li')
+    titles = response.select(
+            "div[id='graphic-menu'] li:not(:first-child) a[id^='icon'][title]"
+        )
 
-    return {
-        col.select_one("a").text.strip():
-            (button.text.strip() if (button := col.select_one("a.button.counter")) else "0")
-        for col in cols
-    }
+    buttons = response.select("a.button.counter")
+
+    keys = [
+        title.text.strip(" \n") for title in titles
+    ]
+
+    values = [
+        x.text.strip(" \n") for x in buttons
+    ]
+
+    return dict(zip(keys, values))
 
 
 def get_user_information(cookies: dict) -> dict:
