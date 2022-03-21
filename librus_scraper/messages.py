@@ -3,8 +3,16 @@ import bs4
 import requests
 from dataclasses import dataclass
 
+
 def get_messages(
-        cookies: dict, *, archive: bool = False, sent: bool=False, deleted: bool=False, csrf_token: str = None, person: str = "-", page: str = "0") -> dict:
+    cookies: dict, *,
+    archive: bool = False,
+    sent: bool = False,
+    deleted: bool = False,
+    csrf_token: str = None,
+    person: str = "-",
+    page: str = "0"
+) -> dict:
 
     data = {
         "requestkey": csrf_token,
@@ -58,7 +66,7 @@ def get_messages(
                     "a[href^='/wiadomosci']").attrs["href"]),
                 "id": re.findall("/wiadomosci/././([0-9]+)/.*", href)[0],
                 "new": "style" in row_cels[2].attrs,
-                "files":row_cels[1].select_one("img") is not None
+                "files": row_cels[1].select_one("img") is not None
             })
 
     pagination = response.select_one("div.pagination > span")
@@ -114,13 +122,13 @@ def read_message(cookies: dict, href: str) -> dict:
 
     information = ["Użytkownik", *information]
 
-    return {    
+    return {
         "nadawca": information[-4],
         "temat": information[-3],
         "data": information[-2],
         "data_odczytania": information[-1],
         "tresc": response.select_one("div.container-message-content").text,
-        "files":list(zip(filenames, files))
+        "files": list(zip(filenames, files))
     }
 
 
@@ -186,30 +194,31 @@ def recover_messages(cookies: dict, messages: list, csrf_token: str, archive: bo
 
 @dataclass()
 class Recipient():
-    name:str
-    recipient_id:str
-    recipient_type:str
+    name: str
+    recipient_id: str
+    recipient_type: str
+
 
 @dataclass()
 class RecipientGroup:
 
-    recipient_type:str
-    is_virtual_classes:str  = "false"
-    group:str = "0"
-    class_id:str = None
+    recipient_type: str
+    is_virtual_classes: str = "false"
+    group: str = "0"
+    class_id: str = None
 
-    def get_recipients(self, cookies:dict) -> list[Recipient]:
+    def get_recipients(self, cookies: dict) -> list[Recipient]:
 
         response = requests.post(
             "https://synergia.librus.pl/getRecipients",
             cookies=cookies,
             data={
-                "typAdresata":self.recipient_type,
+                "typAdresata": self.recipient_type,
                 "czyWirtualneKlasy": self.is_virtual_classes == "true",
-                "idGrupy" : self.group,
-                "klasa_rada_rodzicow" : self.class_id,
-                "klasa_opiekunowie" : self.class_id,
-                "klasa_rodzice" : self.class_id,
+                "idGrupy": self.group,
+                "klasa_rada_rodzicow": self.class_id,
+                "klasa_opiekunowie": self.class_id,
+                "klasa_rodzice": self.class_id,
             }
         )
 
@@ -220,10 +229,10 @@ class RecipientGroup:
 
         labels = response.select("label")
 
-        return [Recipient(label.text.strip(),label.attrs['for'].split("_")[1], self.recipient_type) for label in labels]
+        return [Recipient(label.text.strip(), label.attrs['for'].split("_")[1], self.recipient_type) for label in labels]
 
 
-def get_recipient_groups(cookies:dict) -> list[RecipientGroup]:
+def get_recipient_groups(cookies: dict) -> list[RecipientGroup]:
 
     response = bs4.BeautifulSoup(
         requests.get("https://synergia.librus.pl/wiadomosci/2/5", cookies=cookies).text,
@@ -248,16 +257,16 @@ def get_recipient_groups(cookies:dict) -> list[RecipientGroup]:
 
 
 def send_message(
-    cookies:dict,
-    csrf_token:str,
-    recipinet:Recipient,
-    title:str,
-    content:str
+    cookies: dict,
+    csrf_token: str,
+    recipinet: Recipient,
+    title: str,
+    content: str
 ) -> None:
 
     data = {
-        "requestkey":csrf_token,
-        "adresat":recipinet.recipient_type,
+        "requestkey": csrf_token,
+        "adresat": recipinet.recipient_type,
         "DoKogo[]": recipinet.recipient_id,
         "DoKogo_hid[]": recipinet.recipient_id,
         "temat": title,

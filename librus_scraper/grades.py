@@ -6,26 +6,26 @@ import re
 
 @dataclass()
 class Grade:
-    grade:float
-    subject:str
-    category:str
-    date:str
-    teacher:str
-    mean:bool
-    to_max_points:bool
-    additional:dict
+    grade: float
+    subject: str
+    category: str
+    date: str
+    teacher: str
+    mean: bool
+    to_max_points: bool
+    additional: dict
 
     @property
     def points(self) -> list[int]:
-        maximal = re.findall("\(\d+-(\d+)\)", self.category)
+        maximal = re.findall(r"\(\d+-(\d+)\)", self.category)
 
         return [self.grade, int(maximal[-1])]
 
 
 @dataclass()
 class Semester():
-    subject:str
-    grades:list[Grade]
+    subject: str
+    grades: list[Grade]
 
     @property
     def points_sum(self) -> int:
@@ -52,7 +52,7 @@ class Semester():
 
 @dataclass()
 class Subject:
-    name:str
+    name: str
     semesters: list[Semester]
 
     @property
@@ -76,7 +76,7 @@ class Subject:
         return self.points_sum / self.points_max * 100
 
 
-def get_grades_detailed(cookies:dict) -> list[Subject]:
+def get_grades_detailed(cookies: dict) -> list[Subject]:
 
     response = bs4.BeautifulSoup(
         requests.get(
@@ -102,7 +102,7 @@ def get_grades_detailed(cookies:dict) -> list[Subject]:
 
         for semester in cols:
             a_elements = semester.select("span > a")
-            grades_obj  = []
+            grades_obj = []
 
             for a in a_elements:
                 grade_info = dict(re.findall(
@@ -129,7 +129,7 @@ def get_grades_detailed(cookies:dict) -> list[Subject]:
                     Grade(
                         float(a.text), subject_name, *values,
                         additional={
-                            key:grade_info[key] for key in grade_info if key not in content + [x[0] for x in is_eq_to]
+                            key: grade_info[key] for key in grade_info if key not in content + [x[0] for x in is_eq_to]
                         }
                     )
                 )
@@ -157,7 +157,7 @@ def get_grades_head(thead: str) -> dict:
 
     rows = thead.select("tr")
 
-    rows_dict = {i:[] for i in range(len(rows))}
+    rows_dict = {i: [] for i in range(len(rows))}
 
     for i, row in enumerate(rows):
 
@@ -168,7 +168,7 @@ def get_grades_head(thead: str) -> dict:
             colspan = int(cell.attrs.get("colspan", 1))
             rowspan = int(cell.attrs.get("rowspan", 1))
 
-            for row_index in range(i, i+rowspan):
+            for row_index in range(i, i + rowspan):
 
                 cell_text = cell.attrs.get(
                     "title", cell.text).strip()
@@ -208,7 +208,7 @@ def get_grades(cookies: dict) -> list:
         ]
 
         cells = list(zip(thead, cells))
-        
+
         subjects.append(
             list(filter(all, cells))
         )

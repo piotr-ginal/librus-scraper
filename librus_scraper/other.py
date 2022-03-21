@@ -16,8 +16,8 @@ def get_notifications(cookies: dict) -> dict:
     )
 
     titles = response.select(
-            "div[id='graphic-menu'] li:not(:first-child) a[id^='icon'][title]"
-        )
+        "div[id='graphic-menu'] li:not(:first-child) a[id^='icon'][title]"
+    )
 
     buttons = response.select("a.button.counter")
 
@@ -50,6 +50,5 @@ def get_user_information(cookies: dict) -> dict:
             re.sub(
                 r" ?\n +", ", ",
                 row.select_one("td").text.strip()
-            )
-        for row in rows[:-1]
+        ) for row in rows[:-1]
     }

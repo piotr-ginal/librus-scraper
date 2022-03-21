@@ -51,7 +51,7 @@ def get_cookies(login: str, password: str) -> dict:
     return dict(response.cookies)
 
 
-def get_csrf_token(cookies: dict, parent:bool=False) -> str:
+def get_csrf_token(cookies: dict, parent: bool = False) -> str:
     response = requests.get(
         f"https://synergia.librus.pl/{'rodzic' if parent else 'uczen'}/index",
         cookies=cookies
@@ -72,7 +72,7 @@ def get_csrf_token(cookies: dict, parent:bool=False) -> str:
     raise AuthorizationException("CSRF token not found")
 
 
-def get_login_history(cookies: dict, parent:bool=False) -> dict:
+def get_login_history(cookies: dict, parent: bool = False) -> dict:
     response = bs4.BeautifulSoup(
         requests.get(
             f"https://synergia.librus.pl/{'rodzic' if parent else 'uczen'}/index",
@@ -92,10 +92,9 @@ def get_login_history(cookies: dict, parent:bool=False) -> dict:
 
     ip_info = list(map(
         lambda x: [
-                    {"date": entry[0], "time": entry[1], "ip": entry[2]}
-                    for entry in re.findall(regex_pattern, x)
-                  ],
-        
+            {"date": entry[0], "time": entry[1], "ip": entry[2]} for entry in re.findall(regex_pattern, x)
+        ],
+
         list(filter(
             lambda x: len(set(x)) > 1,
             re.split("ostatnie.{0,4}udane logowania:", title_strig)
