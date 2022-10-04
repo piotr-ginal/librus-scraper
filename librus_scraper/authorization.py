@@ -17,19 +17,25 @@ def parse_cookie(cookie_string: str) -> dict:
 def get_cookies(login: str, password: str) -> dict:
 
     response = requests.get(
-        url='https://api.librus.pl/OAuth/Authorization?client_id=46&response_type=code&scope=mydata'
+        "https://api.librus.pl/OAuth/Authorization?client_id=46&response_type=code&scope=mydata"
     )
 
-    data = {
-        "action": "login",
-        "login": login,
-        "pass": password
-    }
+    cookies = {}
+
+    for cookie_string in response.request.headers["Cookie"].split("; "):
+
+        data = cookie_string.split("=")
+
+        cookies[data[0]] = data[1]
 
     response = requests.post(
-        url='https://api.librus.pl/OAuth/Authorization?client_id=46',
-        data=data,
-        cookies=parse_cookie(response.request.headers["cookie"])
+        "https://api.librus.pl/OAuth/Authorization?client_id=46",
+        data={
+            "action": "login",
+            "login": login,
+            "pass": password
+        },
+        cookies=cookies
     )
 
     try:
@@ -40,12 +46,12 @@ def get_cookies(login: str, password: str) -> dict:
     if response_json["status"] != "ok":
         raise AuthorizationException(response.json()["errors"])
 
-    cookies_dict = parse_cookie(response.request.headers["cookie"])
-    cookies_dict["DeviceCookie"] = dict(response.cookies)['DeviceCookie']
-
     response = requests.get(
-        url="https://api.librus.pl/OAuth/Authorization/Grant?client_id=46",
-        cookies=cookies_dict
+        "https://api.librus.pl/OAuth/Authorization/PerformLogin?client_id=46",
+        cookies=cookies,
+        headers={
+            "Referer": "https://portal.librus.pl/rodzina"
+        }
     )
 
     return dict(response.cookies)
