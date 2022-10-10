@@ -4,6 +4,31 @@ import requests
 from dataclasses import dataclass
 
 
+def process_message_tr(row: bs4.element.Tag) -> dict:
+    row_cels = row.select("td")
+
+    data = {
+        "nadawca": row_cels[2].text,
+        "temat": row_cels[3].select_one("a[href]").text,
+        "data": row_cels[4].text,
+        "href": (href := row.select_one(
+            "a[href^='/wiadomosci']").attrs["href"]),
+        "id": re.findall("/wiadomosci/././([0-9]+)/.*", href)[0],
+        "new": "style" in row_cels[2].attrs,
+        "files": row_cels[1].select_one("img") is not None,
+        "tags": None
+    }
+
+    tags = row_cels[3].select("span")
+
+    if tags is None:
+        return data
+
+    data["tags"] = {tag.text for tag in tags}
+
+    return data
+
+
 def get_messages(
     cookies: dict, *,
     archive: bool = False,
@@ -56,18 +81,7 @@ def get_messages(
     if not (len(rows) == 1 and rows[0].select_one("td").text == "Brak wiadomości"):
 
         for row in rows:
-            row_cels = row.select("td")
-
-            messages.append({
-                "nadawca": row_cels[2].text,
-                "temat": row_cels[3].text,
-                "data": row_cels[4].text,
-                "href": (href := row.select_one(
-                    "a[href^='/wiadomosci']").attrs["href"]),
-                "id": re.findall("/wiadomosci/././([0-9]+)/.*", href)[0],
-                "new": "style" in row_cels[2].attrs,
-                "files": row_cels[1].select_one("img") is not None
-            })
+            messages.append(process_message_tr(row))
 
     pagination = response.select_one("div.pagination > span")
 
