@@ -328,3 +328,27 @@ def manage_tags_on_messages(
     text = response.select_one("div.container.green > div.container-background > p").text
 
     return int(text.split(": ")[1])
+
+
+def get_tags(cookies: dict, name_as_key: bool = False) -> dict:
+    url = "https://synergia.librus.pl/wiadomosci_aktualne"
+
+    response = bs4.BeautifulSoup(requests.get(url, cookies=cookies).text, "html.parser")
+
+    tag_table_row = response.select("table.message-labels tr:has(td.label-name)")
+
+    tags = {}
+
+    for tag in tag_table_row:
+        a_name_element = tag.select_one("td.label-name > a")
+        tag_id = a_name_element.attrs["href"][21:]
+        tag_name = a_name_element.text.strip()
+        tag_color = tag.select_one("td.label-color > span").attrs["style"][19:]
+
+        if not name_as_key:
+            tags[tag_id] = {"color": tag_color, "name": tag_name}
+            continue
+
+        tags[tag_name] = {"color": tag_color, "id": tag_id}
+
+    return tags
