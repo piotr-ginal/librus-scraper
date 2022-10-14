@@ -296,3 +296,35 @@ def send_message(
         },
         data=data
     )
+
+
+def manage_tags_on_messages(
+    cookies: dict,
+    messages: list[str],
+    tag_id: str,
+    *,
+    archive: bool = False,
+    delete: bool = False
+) -> int:
+
+    if not messages:
+        return 0
+
+    opcja = f"{'usunEtykiete_' if delete else 'oznaczEtykieta_'}{tag_id}",
+
+    data = {"opcja_zaznaczone_g": opcja}
+
+    for index, message_id in enumerate(messages):
+        data[f"wiadomosci[{index}]"] = message_id
+
+    url = "https://synergia.librus.pl/" + (
+        "wiadomosci_archiwum" if archive else "wiadomosci_aktualne")
+
+    response = requests.post(
+        url, cookies=cookies, data=data, headers={"Referer": url})
+
+    response = bs4.BeautifulSoup(response.text, "html.parser")
+
+    text = response.select_one("div.container.green > div.container-background > p").text
+
+    return int(text.split(": ")[1])
