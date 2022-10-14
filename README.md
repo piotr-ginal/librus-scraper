@@ -38,6 +38,10 @@ Otrzymujemy:
             "id": "1234567",  # id wiadomości
             "new": True,  # czy ta wiadomość jest nowa?
             "files": True  # czy ta wiadomość zawiera jakieś pliki?
+            "tags": [  # lista tagów (None jeżeli wiadomości nie ma)
+                "tag1",
+                "tag2"
+            ]
         }
     ]
 }
