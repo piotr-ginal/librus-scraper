@@ -37,7 +37,7 @@ Otrzymujemy:
             "href": "/wiadomosci/1/5/1234567/f0",  # link do wiadomości
             "id": "1234567",  # id wiadomości
             "new": True,  # czy ta wiadomość jest nowa?
-            "files": True  # czy ta wiadomość zawiera jakieś pliki?
+            "files": True,  # czy ta wiadomość zawiera jakieś pliki?
             "tags": [  # lista tagów (None jeżeli wiadomości nie ma)
                 "tag1",
                 "tag2"
