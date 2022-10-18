@@ -352,3 +352,44 @@ def get_tags(cookies: dict, name_as_key: bool = False) -> dict:
         tags[tag_name] = {"color": tag_color, "id": tag_id}
 
     return tags
+
+
+def create_tag(cookies: dict, tag_name: str, tag_color: str) -> bool:
+    url = "https://synergia.librus.pl/wiadomosci/etykiety"
+
+    data = {
+        "nazwaEtykiety": tag_name, "rgbKoloru": tag_color, "dodaj_etykiete": "Dodaj"}
+
+    response = requests.post(url, data=data, cookies=cookies, headers={"Referer": url})
+
+    if "Etykieta o podanej nazwie już istnieje." in response.text:
+        return False
+
+    elif "Etykieta została dodana" in response.text:
+        return True
+
+    raise Exception("tag was not created due to unknown reasons")
+
+
+def delete_tag(cookies: dict, tag_id: str) -> bool:
+
+    url = "https://synergia.librus.pl/wiadomosci/etykiety"
+
+    data = {
+        "tak": "Tak",
+        "potwierdzenie": "Tak",
+        "parametr": tag_id,
+        "id": "1"
+    }
+
+    response = requests.post(
+        url, cookies=cookies, headers={"Referer": url}, data=data
+    )
+
+    status = bs4.BeautifulSoup(
+        response.text, "html.parser").select_one("div.container.green > div > p")
+
+    if status is not None and status.text == "Etykieta została usunięta.":
+        return True
+
+    return False
