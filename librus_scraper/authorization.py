@@ -2,6 +2,7 @@ import re
 from json.decoder import JSONDecodeError
 import bs4
 import requests
+from requests.cookies import RequestsCookieJar
 
 
 class AuthorizationException(Exception):
@@ -14,7 +15,7 @@ def parse_cookie(cookie_string: str) -> dict:
     }
 
 
-def get_cookies(login: str, password: str) -> dict:
+def _get_cookies(login: str, password: str) -> RequestsCookieJar:
 
     response = requests.get(
         "https://api.librus.pl/OAuth/Authorization?client_id=46&response_type=code&scope=mydata"
@@ -54,7 +55,11 @@ def get_cookies(login: str, password: str) -> dict:
         }
     )
 
-    return dict(response.cookies)
+    return response.cookies
+
+
+def get_cookies(login: str, password: str) -> dict:
+    return dict(_get_cookies(login, password))
 
 
 def get_csrf_token(cookies: dict, parent: bool = False) -> str:
