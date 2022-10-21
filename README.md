@@ -6,7 +6,9 @@
 - plan lekcji
 - frekwencja
 - oceny
-    
+
+## Instalacja
+```pip install librus_scraper```
 
 ## Przykłady użycia
 ### Pobieranie wiadomości:
